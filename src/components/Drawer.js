@@ -1,6 +1,17 @@
+import { Link } from "react-router-dom";
+import { useContext } from "react";
+import AnimeContext from "../context/AnimeContext";
 import SearchForm from "./SearchForm";
 
 export default function Drawer({ children }) {
+  const { navLinks } = useContext(AnimeContext);
+
+  const listItems = navLinks.map((link) => (
+    <li key={link.id}>
+      <Link to={link.href}>{link.name}</Link>
+    </li>
+  ));
+  
   return (
     <nav>
       <div className="drawer drawer-end">
@@ -11,12 +22,7 @@ export default function Drawer({ children }) {
           <label htmlFor="my-drawer-3" className="drawer-overlay"></label>
           <ul className="menu p-4 overflow-y-auto w-80 bg-base-100">
             <SearchForm />
-            <li>
-              <a>Sidebar Item 1</a>
-            </li>
-            <li>
-              <a>Sidebar Item 2</a>
-            </li>
+            {listItems}
           </ul>
         </div>
       </div>

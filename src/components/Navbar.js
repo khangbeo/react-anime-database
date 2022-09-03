@@ -1,8 +1,20 @@
 import { Link } from "react-router-dom";
 import { TiThMenu } from "react-icons/ti";
+import { useContext } from "react";
+import AnimeContext from "../context/AnimeContext";
 import SearchForm from "./SearchForm";
 
 export default function Navbar() {
+  const { navLinks } = useContext(AnimeContext);
+
+  const listItems = navLinks.map((link) => (
+    <li key={link.id}>
+      <Link to={link.href} className="btn btn-ghost">
+        {link.name}
+      </Link>
+    </li>
+  ));
+
   return (
     <div className="bg-primary sticky w-full navbar top-0 z-20 ease-in-out duration-300 text-primary-content">
       <div className="flex-1">
@@ -17,16 +29,7 @@ export default function Navbar() {
       </div>
       <div className="flex-none hidden lg:block">
         <ul className="flex items-center">
-          <li>
-            <Link to="#" className="btn btn-ghost">
-              Navbar Item 1
-            </Link>
-          </li>
-          <li>
-            <Link to="#" className="btn btn-ghost">
-              Navbar Item 2
-            </Link>
-          </li>
+          {listItems}
           <li>
             <SearchForm />
           </li>

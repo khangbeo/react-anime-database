@@ -1,24 +1,21 @@
 import { useContext } from "react";
 import AnimeContext from "../context/AnimeContext";
-
+import SidebarContent from "./SidebarContent";
 export default function Sidebar() {
-  const { topAnime } = useContext(AnimeContext);
+  const { topPopular, topAiring, topUpcoming } = useContext(AnimeContext);
+
   return (
-    <div className="md:flex flex-col hidden w-72">
-      <h3 className="text-3xl text-center font-bold mb-5">Top Anime</h3>
-      <nav className="flex flex-col">
-        {topAnime.map((anime) => (
-          <a
-            className="btn btn-md btn-primary rounded-3xl m-2"
-            href={anime.url}
-            target="_blank"
-            rel="noreferrer"
-            key={anime.mal_id}
-          >
-            {anime.title}
-          </a>
-        ))}
-      </nav>
-    </div>
+    <aside className="md:flex flex-col hidden w-72 pt-10">
+      <div className="h-screen overflow-y-auto">
+        <h3 className="text-3xl text-center font-bold">Top Airing Anime</h3>
+        <SidebarContent animeList={topAiring} />
+
+        <h3 className="text-3xl text-center font-bold">Top Upcoming Anime</h3>
+        <SidebarContent animeList={topUpcoming} />
+
+        <h3 className="text-3xl text-center font-bold">Most Popular Anime</h3>
+        <SidebarContent animeList={topPopular} />
+      </div>
+    </aside>
   );
 }
