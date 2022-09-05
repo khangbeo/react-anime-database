@@ -1,19 +1,28 @@
-import React from "react";
+import { Link } from "react-router-dom";
+import { useContext } from "react";
+import AnimeContext from "../context/AnimeContext";
 
 export default function SidebarContent({ animeList }) {
+  const {loading} = useContext(AnimeContext)
+
   return (
     <div className="flex flex-col mb-5">
-      {animeList.map((anime) => (
-        <a
-          className="btn btn-md btn-primary rounded-none"
-          href={anime.url}
-          target="_blank"
-          rel="noreferrer"
-          key={anime.mal_id}
-        >
-          {anime.title}
-        </a>
-      ))}
+      {loading ? (
+        <p>Loading</p>
+      ) : (
+        <>
+          {" "}
+          {animeList.map((anime) => (
+            <Link
+              className="btn btn-md btn-primary rounded-none"
+              to={`/anime/${anime.mal_id}`}
+              key={anime.mal_id}
+            >
+              {anime.title}
+            </Link>
+          ))}
+        </>
+      )}
     </div>
   );
 }

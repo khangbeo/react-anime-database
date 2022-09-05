@@ -156,37 +156,37 @@ export default function AnimeCardDetail() {
                     Licensor
                 */}
           <table className="table-fixed text-left border-separate border-spacing-5 w-full ">
-            <TableRow heading={"Type"} data={fullAnime.type} />
+            <TableRow heading={"Type"} data={fullAnime?.type} />
             <TableRow
               heading={"Genre"}
-              data={combineArrayElements(fullAnime.genres)}
+              data={combineArrayElements(fullAnime?.genres)}
             />
             <TableRow
               heading={"Themes"}
-              data={combineArrayElements(fullAnime.themes)}
+              data={combineArrayElements(fullAnime?.themes)}
             />
-            <TableRow heading={"Aired"} data={fullAnime.aired?.string} />
-            <TableRow heading={"Episodes"} data={fullAnime.episodes} />
-            <TableRow heading={"Duration"} data={fullAnime.duration} />
-            <TableRow heading={"Season"} data={fullAnime.season} />
+            <TableRow heading={"Aired"} data={fullAnime?.aired?.string} />
+            <TableRow heading={"Episodes"} data={fullAnime?.episodes} />
+            <TableRow heading={"Duration"} data={fullAnime?.duration} />
+            <TableRow heading={"Season"} data={fullAnime?.season} />
             <TableRow
               heading={"Studios"}
-              data={combineArrayElements(fullAnime.studios)}
+              data={combineArrayElements(fullAnime?.studios)}
             />
             <TableRow
               heading={"Licensor"}
-              data={combineArrayElements(fullAnime.licensors)}
+              data={combineArrayElements(fullAnime?.licensors)}
             />
           </table>
         </div>
       </div>
 
       {/* Background div */}
-      {fullAnime.background && (
+      {fullAnime?.background && (
         <div className="card w-full bg-base-300 shadow-xl my-5">
           <div className="card-body">
             <h3 className="card-title">Background</h3>
-            <p>{fullAnime.background}</p>
+            <p>{fullAnime?.background}</p>
           </div>
         </div>
       )}
@@ -195,7 +195,7 @@ export default function AnimeCardDetail() {
       <div className="card w-full bg-base-300 shadow-xl my-5 h-72">
         <h3 className="card-title px-5 py-3">Synopsis</h3>
         <div className="card-body overflow-y-auto">
-          <p>{fullAnime.synopsis}</p>
+          <p>{fullAnime?.synopsis}</p>
         </div>
       </div>
 

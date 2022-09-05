@@ -4,10 +4,11 @@ const AnimeContext = createContext();
 
 export function AnimeProvider({ children }) {
   const [animeList, setAnimeList] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   /** Top Anime
    * maybe put these arrays into an object like this
-   * 
+   *
    * Edit: Nvm, it only want to render one category at a time instead of all of them
    * I went back to the old ugly way of storing state
    * {
@@ -22,9 +23,9 @@ export function AnimeProvider({ children }) {
    *
    */
 
-const [topPopular, setTopPopular] = useState([])
-const [topAiring, setTopAiring] = useState([])
-const [topUpcoming, setTopUpcoming] = useState([])
+  const [topPopular, setTopPopular] = useState([]);
+  const [topAiring, setTopAiring] = useState([]);
+  const [topUpcoming, setTopUpcoming] = useState([]);
 
   const [search, setSearch] = useState("");
 
@@ -40,14 +41,17 @@ const [topUpcoming, setTopUpcoming] = useState([])
   ];
 
   const getAnime = async () => {
+    setLoading(true)
     const animeQuery = `anime?q=${search}&order_by=score&sort=asc`;
 
     const res = await fetch(`${url}/${animeQuery}`);
     const animeData = await res.json();
     setAnimeList(animeData.data);
+    setLoading(false)
   };
 
   const getTopAnime = async (query) => {
+    setLoading(true)
     const topQuery = `top/anime?filter=${query}`;
     const res = await fetch(`${url}/${topQuery}`);
     const topAnimeData = await res.json();
@@ -58,14 +62,15 @@ const [topUpcoming, setTopUpcoming] = useState([])
         setTopPopular(topFive);
         break;
       case "airing":
-        setTopAiring(topFive );
+        setTopAiring(topFive);
         break;
       case "upcoming":
-        setTopUpcoming(topFive );
+        setTopUpcoming(topFive);
         break;
       default:
         return;
     }
+    setLoading(false)
   };
 
   useEffect(() => {
@@ -78,6 +83,7 @@ const [topUpcoming, setTopUpcoming] = useState([])
   return (
     <AnimeContext.Provider
       value={{
+        loading,
         topPopular,
         topAiring,
         topUpcoming,
@@ -85,7 +91,7 @@ const [topUpcoming, setTopUpcoming] = useState([])
         search,
         setSearch,
         navLinks,
-        getAnime
+        getAnime,
       }}
     >
       {children}
