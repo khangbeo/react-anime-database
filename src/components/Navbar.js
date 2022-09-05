@@ -16,7 +16,7 @@ export default function Navbar() {
   ));
 
   return (
-    <div className="bg-primary sticky w-full navbar top-0 z-20 ease-in-out duration-300 text-primary-content">
+    <div className="bg-primary sticky w-full h-10 navbar top-0 z-20 ease-in-out duration-300 text-primary-content">
       <div className="flex-1">
         <Link to="/" className="btn btn-ghost normal-case text-xl">
           Navbar Title

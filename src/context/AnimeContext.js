@@ -39,11 +39,6 @@ const [topUpcoming, setTopUpcoming] = useState([])
     { id: 5, name: "NSFW 18+", href: "#" },
   ];
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    getAnime();
-  };
-
   const getAnime = async () => {
     const animeQuery = `anime?q=${search}&order_by=score&sort=asc`;
 
@@ -58,7 +53,6 @@ const [topUpcoming, setTopUpcoming] = useState([])
     const topAnimeData = await res.json();
     const topFive = topAnimeData?.data.slice(0, 5);
 
-    console.log(topAnimeData)
     switch (query) {
       case "bypopularity":
         setTopPopular(topFive);
@@ -90,8 +84,8 @@ const [topUpcoming, setTopUpcoming] = useState([])
         animeList,
         search,
         setSearch,
-        handleSearch,
         navLinks,
+        getAnime
       }}
     >
       {children}

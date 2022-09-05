@@ -5,7 +5,7 @@ export default function SidebarContent({ animeList }) {
     <div className="flex flex-col mb-5">
       {animeList.map((anime) => (
         <a
-          className="btn btn-md btn-primary rounded-3xl m-2"
+          className="btn btn-md btn-primary rounded-none"
           href={anime.url}
           target="_blank"
           rel="noreferrer"

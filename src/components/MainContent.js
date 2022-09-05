@@ -5,7 +5,7 @@ import { useContext } from "react";
 export default function MainContent() {
   const { animeList } = useContext(AnimeContext);
   return (
-    <main className="mx-auto w-full h-full md:h-screen md:overflow-y-auto">
+    <main className="mx-auto w-full md:overflow-y-auto h-screen">
       {animeList.length > 0 ? (
         <div className="grid gap-14 my-20 mx-7 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {animeList.map((anime) => (

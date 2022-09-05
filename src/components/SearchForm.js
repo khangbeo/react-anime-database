@@ -1,9 +1,19 @@
 import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import AnimeContext from "../context/AnimeContext";
 import { FaSearch } from "react-icons/fa";
 
 export default function SearchForm() {
-  const { handleSearch, search, setSearch } = useContext(AnimeContext);
+  const { getAnime ,search, setSearch } = useContext(AnimeContext);
+
+  let navigate = useNavigate()
+
+    const handleSearch = async (e) => {
+      e.preventDefault();
+      getAnime();
+      navigate("/");
+      setSearch("");
+    };
 
   return (
     <form className="form-control m-5" onSubmit={handleSearch}>
