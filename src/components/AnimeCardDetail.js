@@ -105,7 +105,7 @@ export default function AnimeCardDetail() {
   const inSnapshot = snapshotMode || source === "snapshot";
 
   return (
-    <div>
+    <div className="flex-1 min-h-0 overflow-y-auto">
       {inSnapshot && (
         <div className="alert alert-warning shadow-lg my-4">
           <span>

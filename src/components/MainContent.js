@@ -37,7 +37,7 @@ export default function MainContent() {
   } = useContext(AnimeContext);
 
   return (
-    <main className="mx-auto w-full md:overflow-y-auto h-screen px-2">
+    <main className="mx-auto w-full flex-1 min-w-0 min-h-0 overflow-y-auto px-2">
       {snapshotMode && (
         <div className="alert alert-warning shadow-lg my-4">
           <span>
@@ -118,7 +118,7 @@ export default function MainContent() {
             ))}
           </div>
           {hasMore && (
-            <div className="text-center mb-16">
+            <div className="text-center pb-16">
               <button
                 type="button"
                 className="btn btn-primary"
