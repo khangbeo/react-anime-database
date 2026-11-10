@@ -1,24 +1,13 @@
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-
-function isNull(value) {
-  return typeof value === "object" && !value;
-}
-
-function combineArrayElements(array) {
-  return array?.map((val) => val.name).join(", ");
-}
-
-// function capitalize(word) {
-//   return [...word[0].toUpperCase(), ...word.slice(1)].join("");
-// }
+import { useState, useEffect, useContext } from "react";
+import { Link, useParams } from "react-router-dom";
+import AnimeContext from "../context/AnimeContext";
+import { getAnimeDetail } from "../api/animeApi";
 
 const Badge = ({ airing, status }) => {
+  if (!status) return null;
   return (
     <span
-      className={`badge badge-${
-        airing ? "success" : "error"
-      } badge-lg m-3 text-lg md:text-2xl h-7 md:h-9`}
+      className={`badge badge-${airing ? "success" : "error"} badge-lg m-3 text-lg md:text-2xl h-7 md:h-9`}
     >
       <p>{status}</p>
     </span>
@@ -26,6 +15,7 @@ const Badge = ({ airing, status }) => {
 };
 
 const TableRow = ({ heading, data }) => {
+  if (data == null || data === "") return null;
   return (
     <tr>
       {heading && <th>{heading}</th>}
@@ -34,229 +24,251 @@ const TableRow = ({ heading, data }) => {
   );
 };
 
+function fmtDate(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? iso : d.toDateString();
+}
+
+function Stat({ label, value }) {
+  return (
+    <div>
+      <h3 className="font-bold">{label}</h3>
+      <p>{value ?? "—"}</p>
+    </div>
+  );
+}
+
 export default function AnimeCardDetail() {
-  let { id } = useParams();
-  const url = process.env.REACT_APP_BASE_URL;
-
-  const [fullAnime, setFullAnime] = useState([]);
-  const [characters, setCharacters] = useState([]);
-
-  console.log(characters);
-  const getFullAnime = async () => {
-    const fullQuery = `anime/${id}/full`;
-    const res = await fetch(`${url}/${fullQuery}`);
-    const fullAnimeData = await res.json();
-    setFullAnime(fullAnimeData.data);
-  };
-
-  const getAnimeCharacters = async () => {
-    const query = `anime/${id}/characters`;
-    const res = await fetch(`${url}/${query}`);
-    const data = await res.json();
-    setCharacters(data.data);
-  };
+  const { id } = useParams();
+  const { snapshotMode } = useContext(AnimeContext);
+  const [anime, setAnime] = useState(null);
+  const [source, setSource] = useState(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    getFullAnime();
+    let cancelled = false;
+    setAnime(null);
+    setError(false);
+    (async () => {
+      try {
+        const result = await getAnimeDetail(id);
+        if (cancelled) return;
+        setAnime(result.data);
+        setSource(result.source);
+      } catch {
+        if (!cancelled) setError(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
-  useEffect(() => {
-    getAnimeCharacters();
-  }, [id]);
+  if (error) {
+    return (
+      <div className="text-center my-16">
+        <p className="text-4xl font-bold mb-4">Couldn't load this anime.</p>
+        <p className="opacity-70 mb-6">
+          None of the data sources could reach it right now.
+        </p>
+        <Link to="/" className="btn btn-primary">
+          Back to Top Anime
+        </Link>
+      </div>
+    );
+  }
+
+  if (!anime) {
+    return <p className="text-4xl text-center m-10">Loading…</p>;
+  }
+
+  const externalLinks = [
+    anime.malId && {
+      name: "MyAnimeList",
+      url: `https://myanimelist.net/anime/${anime.malId}`,
+    },
+    anime.anilistId && {
+      name: "AniList",
+      url: `https://anilist.co/anime/${anime.anilistId}`,
+    },
+    anime.kitsuId && {
+      name: "Kitsu",
+      url: `https://kitsu.io/anime/${anime.kitsuId}`,
+    },
+  ].filter(Boolean);
+
+  const aired =
+    fmtDate(anime.airedFrom) &&
+    `${fmtDate(anime.airedFrom)}${anime.airedTo ? ` to ${fmtDate(anime.airedTo)}` : ""}`;
+
+  const inSnapshot = snapshotMode || source === "snapshot";
 
   return (
-    <>
-      <div>
-        {/* Image */}
-        <img
-          className="pt-5 h-full w-full"
-          src={fullAnime?.images?.jpg?.large_image_url}
-          alt="anime detail"
-        />
-        <div className="mt-3">
-          <div className="flex flex-wrap items-center justify-center">
-            {/* Name */}
-            <h2 className="text-3xl md:text-5xl font-bold">
-              {fullAnime?.title}
-            </h2>
-            {/* Airing/Not Airing Badge */}
-            <Badge airing={fullAnime?.airing} status={fullAnime?.status} />
-          </div>
+    <div className="flex-1 min-h-0 overflow-y-auto">
+      {inSnapshot && (
+        <div className="alert alert-warning shadow-lg my-4">
+          <span>
+            Live data couldn't be reached, so you're seeing a snapshot of top and
+            seasonal titles saved on Nov 10, 2026.
+          </span>
+        </div>
+      )}
 
-          {/* Score, Ranking, Popularity, Favorites */}
+      {anime.banner && (
+        <img className="w-full max-h-72 object-cover" src={anime.banner} alt="" />
+      )}
+
+      <div className="flex flex-col md:flex-row gap-6 mt-5">
+        {anime.image && (
+          <img
+            className="w-64 mx-auto md:mx-0 object-cover rounded"
+            src={anime.image}
+            alt={anime.title}
+          />
+        )}
+        <div className="flex-1">
+          <div className="flex flex-wrap items-center justify-center md:justify-start">
+            <h2 className="text-3xl md:text-5xl font-bold">{anime.title}</h2>
+            <Badge airing={anime.airing} status={anime.status} />
+          </div>
+          {anime.romaji && anime.romaji !== anime.title && (
+            <p className="text-center md:text-left opacity-70 mt-1">{anime.romaji}</p>
+          )}
+
           <div className="grid grid-cols-4 text-center text-md md:text-2xl my-5 p-2 card bg-base-300 text-base-content">
-            <div>
-              <h3 className="font-bold">Score</h3>
-              <p>{isNull(fullAnime?.score) ? 0 : fullAnime?.score}</p>
-            </div>
-            <div>
-              <h3 className="font-bold">Rank</h3>
-              <p>#{isNull(fullAnime?.rank) ? 0 : fullAnime?.rank}</p>
-            </div>
-            <div>
-              <h3 className="font-bold">Popularity</h3>
-              <p>#{isNull(fullAnime?.popularity) ? 0 : fullAnime?.popularity}</p>
-            </div>
-            <div>
-              <h3 className="font-bold">Favorites</h3>
-              <p>{isNull(fullAnime?.favorites) ? 0 : fullAnime?.favorites}</p>
-            </div>
+            <Stat label="Score" value={anime.score != null ? Number(anime.score).toFixed(2) : null} />
+            <Stat label="Rank" value={anime.rank != null ? `#${anime.rank}` : null} />
+            <Stat label="Popularity" value={anime.popularity != null ? `#${anime.popularity}` : null} />
+            <Stat
+              label={anime.members != null ? "Members" : "Favorites"}
+              value={
+                anime.members != null
+                  ? Number(anime.members).toLocaleString()
+                  : anime.favorites != null
+                    ? Number(anime.favorites).toLocaleString()
+                    : null
+              }
+            />
           </div>
 
-          {/* streaming */}
-          {fullAnime?.streaming?.length > 0 && (
-            <div className="my-5">
-              <h3 className="text-center text-2xl font-bold mb-2">
-                Where to Stream
-              </h3>
-              <div className="flex justify-center flex-wrap">
-                {fullAnime?.streaming?.map((stream) => (
+          {anime.genres?.length > 0 && (
+            <div className="flex flex-wrap gap-2 my-3 justify-center md:justify-start">
+              {anime.genres.map((g) => (
+                <span key={g} className="badge badge-outline">
+                  {g}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {anime.trailerUrl && (
+            <div className="my-4 text-center md:text-left">
+              <a
+                className="btn btn-secondary"
+                href={anime.trailerUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Watch Trailer
+              </a>
+            </div>
+          )}
+
+          {externalLinks.length > 0 && (
+            <div className="my-4">
+              <h3 className="text-center md:text-left text-xl font-bold mb-2">External Links</h3>
+              <div className="flex justify-center md:justify-start flex-wrap">
+                {externalLinks.map((link) => (
                   <a
                     className="btn btn-xs btn-info m-1"
-                    key={stream?.name}
-                    href={stream?.url}
+                    key={link.name}
+                    href={link.url}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    {stream?.name}
+                    {link.name}
                   </a>
                 ))}
               </div>
             </div>
           )}
-
-          <div className="my-5">
-            {/* external links */}
-            <h3 className="text-center text-2xl font-bold mb-2">
-              External Links
-            </h3>
-            <div className="flex justify-center flex-wrap">
-              {fullAnime?.external?.map((link) => (
-                <a
-                  className="btn btn-xs btn-info m-1"
-                  key={link?.name}
-                  href={link?.url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {link?.name}
-                </a>
-              ))}
-            </div>
-          </div>
-          {/* Information
-                    Type    
-                    Episodes
-                    Duration
-                    Genre
-                    Theme
-                    Aired
-                    Season
-                    Studios
-                    Licensor
-                */}
-          <table className="table-fixed text-left border-separate border-spacing-5 w-full ">
-            <TableRow heading={"Type"} data={fullAnime?.type} />
-            <TableRow
-              heading={"Genre"}
-              data={combineArrayElements(fullAnime?.genres)}
-            />
-            <TableRow
-              heading={"Themes"}
-              data={combineArrayElements(fullAnime?.themes)}
-            />
-            <TableRow heading={"Aired"} data={fullAnime?.aired?.string} />
-            <TableRow heading={"Episodes"} data={fullAnime?.episodes} />
-            <TableRow heading={"Duration"} data={fullAnime?.duration} />
-            <TableRow heading={"Season"} data={fullAnime?.season} />
-            <TableRow
-              heading={"Studios"}
-              data={combineArrayElements(fullAnime?.studios)}
-            />
-            <TableRow
-              heading={"Licensor"}
-              data={combineArrayElements(fullAnime?.licensors)}
-            />
-          </table>
         </div>
       </div>
 
-      {/* Background div */}
-      {fullAnime?.background && (
+      <table className="table-fixed text-left border-separate border-spacing-5 w-full">
+        <tbody>
+          <TableRow heading="Type" data={anime.type} />
+          <TableRow heading="Genres" data={anime.genres?.join(", ")} />
+          <TableRow heading="Aired" data={aired} />
+          <TableRow heading="Episodes" data={anime.episodes} />
+          <TableRow
+            heading="Duration"
+            data={anime.episodeLength ? `${anime.episodeLength} min per episode` : null}
+          />
+          <TableRow
+            heading="Season"
+            data={
+              anime.season || anime.year
+                ? `${anime.season ? anime.season[0].toUpperCase() + anime.season.slice(1) : ""} ${anime.year ?? ""}`.trim()
+                : null
+            }
+          />
+          <TableRow heading="Studios" data={anime.studios?.join(", ")} />
+          <TableRow heading="Producers" data={anime.producers?.join(", ")} />
+          <TableRow heading="Rating" data={anime.rating} />
+        </tbody>
+      </table>
+
+      {anime.synopsis && (
         <div className="card w-full bg-base-300 shadow-xl my-5">
+          <h3 className="card-title px-5 py-3">Synopsis</h3>
           <div className="card-body">
-            <h3 className="card-title">Background</h3>
-            <p>{fullAnime?.background}</p>
+            <p>{anime.synopsis}</p>
           </div>
         </div>
       )}
-      {/* synopsis div */}
 
-      <div className="card w-full bg-base-300 shadow-xl my-5 h-72">
-        <h3 className="card-title px-5 py-3">Synopsis</h3>
-        <div className="card-body overflow-y-auto">
-          <p>{fullAnime?.synopsis}</p>
-        </div>
-      </div>
-
-      {/* Characters div 
-      
-              /* character: {
-              images: {
-                jpg: image_url
-              },
-              name, 
-              url,
-            }, 
-            favorites,
-            role 
-      */}
-
-      <div className="card w-full bg-base-300 shadow-xl my-5">
-        <h3 className="card-title px-5 py-3">Characters</h3>
-        <div className="h-96 overflow-y-auto">
-          <table className="table-fixed text-left border-separate border-spacing-5">
-            <thead>
-              <th>Name</th>
-              <th>Role</th>
-            </thead>
-            {characters?.map((e) => (
-              <>
-                <tbody>
-                  <tr>
-                    <td>
-                      <div className="flex items-center space-x-3">
-                        <div className="avatar">
-                          <div className="mask mask-squircle w-12 h-12">
-                            <img
-                              src={e.character.images.jpg.image_url}
-                              alt="Character"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <div className="font-bold">{e.character.name}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>{e.role}</td>
-                  </tr>
-                </tbody>
-              </>
+      {anime.characters?.length > 0 && (
+        <div className="card w-full bg-base-300 shadow-xl my-5">
+          <h3 className="card-title px-5 py-3">Characters</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-5">
+            {anime.characters.map((c, i) => (
+              <div key={`${c.name}-${i}`} className="flex items-center gap-3">
+                {c.image && (
+                  <img src={c.image} alt={c.name} className="w-12 h-12 object-cover rounded-full" />
+                )}
+                <div>
+                  <p className="font-bold leading-tight">{c.name}</p>
+                  <p className="text-xs opacity-70">
+                    {c.role}
+                    {c.voiceActor && ` · VA: ${c.voiceActor}`}
+                  </p>
+                </div>
+              </div>
             ))}
-          </table>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Reviews div */}
-      <div>
-        {/* Review card content */}
-        <div>
-          {/* Name, Rating, Date */}
-          {/* Review body */}
-          {/* Likes, Reviewer's Rating */}
+      {anime.relations?.length > 0 && (
+        <div className="my-8">
+          <h3 className="text-2xl font-bold mb-4 text-center">More Like This</h3>
+          <div className="grid gap-8 grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
+            {anime.relations
+              .filter((r) => r.malId != null)
+              .map((r, i) => (
+                <Link key={`${r.malId}-${i}`} to={`/anime/${r.malId}`} className="text-center">
+                  {r.image && (
+                    <img src={r.image} alt={r.title} className="w-full h-48 object-cover rounded" />
+                  )}
+                  <p className="font-semibold mt-2 leading-tight">{r.title}</p>
+                  <p className="text-xs opacity-70">{r.relationType?.replace(/_/g, " ")}</p>
+                </Link>
+              ))}
+          </div>
         </div>
-      </div>
-    </>
+      )}
+    </div>
   );
 }

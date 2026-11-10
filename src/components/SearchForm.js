@@ -4,16 +4,14 @@ import AnimeContext from "../context/AnimeContext";
 import { FaSearch } from "react-icons/fa";
 
 export default function SearchForm() {
-  const { getAnime ,search, setSearch } = useContext(AnimeContext);
+  const { runSearch, search, setSearch } = useContext(AnimeContext);
+  const navigate = useNavigate();
 
-  let navigate = useNavigate()
-
-    const handleSearch = async (e) => {
-      e.preventDefault();
-      getAnime();
-      navigate("/");
-      setSearch("");
-    };
+  const handleSearch = (e) => {
+    e.preventDefault();
+    runSearch(search);
+    navigate("/");
+  };
 
   return (
     <form className="form-control m-5" onSubmit={handleSearch}>
@@ -26,7 +24,7 @@ export default function SearchForm() {
           onChange={(e) => setSearch(e.target.value)}
           className="input w-full text-primary-content bg-base-content focus:outline-none"
         />
-        <button type="submit" className="btn btn-square outline-none">
+        <button type="submit" className="btn btn-square outline-none" aria-label="Search">
           <FaSearch />
         </button>
       </div>

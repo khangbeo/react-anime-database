@@ -1,17 +1,33 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import AnimeContext from "../context/AnimeContext";
 import SearchForm from "./SearchForm";
 
 export default function Drawer({ children }) {
-  const { navLinks } = useContext(AnimeContext);
+  const { navLinks, showTop, showSeason, showRecommendations, pickRandom } =
+    useContext(AnimeContext);
+  const navigate = useNavigate();
+
+  const handleNav = async (link) => {
+    if (link.view === "random") {
+      const anime = await pickRandom();
+      if (anime?.malId != null) navigate(`/anime/${anime.malId}`);
+      return;
+    }
+    if (link.view === "top") showTop();
+    else if (link.view === "season") showSeason();
+    else if (link.view === "recommendations") showRecommendations();
+    navigate("/");
+  };
 
   const listItems = navLinks.map((link) => (
     <li key={link.id}>
-      <Link to={link.href}>{link.name}</Link>
+      <button type="button" onClick={() => handleNav(link)}>
+        {link.name}
+      </button>
     </li>
   ));
-  
+
   return (
     <nav>
       <div className="drawer drawer-end">
